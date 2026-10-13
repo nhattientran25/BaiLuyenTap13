@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tiến Táo - cửa hàng phụ kiện điện thoại với giỏ hàng Vue.js">
+  <meta name="theme-color" content="#f8f7ff">
+  <title>Tiến Táo - Phụ kiện điện thoại</title>
+
+  <!-- Tailwind CSS CDN hỗ trợ trình bày; style.css chứa các quy tắc riêng của cửa hàng. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- HEADER và NAVIGATION là HTML tĩnh; Vue chỉ nội suy số lượng giỏ hàng. -->
+    <header class="site-header sticky top-0 z-50 bg-white shadow-sm">
+      <nav class="nav-shell mx-auto flex max-w-6xl items-center justify-between px-6 py-4" aria-label="Điều hướng chính">
+        <a href="#trang-chu" class="brand text-2xl font-bold text-indigo-600" aria-label="Tiến Táo - Trang chủ">
+          <img class="shop-logo" src="../images/logo-tien-tao.png" alt="">
+          <span>Tiến Táo</span>
+        </a>
+        <ul class="nav-links flex items-center gap-6 font-medium">
+          <li><a href="#trang-chu" class="hover:text-indigo-600">Trang chủ</a></li>
+          <li><a href="#san-pham" class="hover:text-indigo-600">Sản phẩm</a></li>
+          <li><a href="#khuyen-mai" class="hover:text-indigo-600">Khuyến mãi</a></li>
+          <li><a href="#danh-gia" class="hover:text-indigo-600">Đánh giá</a></li>
+          <li><a href="#lien-he" class="hover:text-indigo-600">Liên hệ</a></li>
+          <li>
+            <a href="#gio-hang" class="cart-link" aria-label="Đi tới giỏ hàng">
+              <span aria-hidden="true">🛒</span>
+              <span class="cart-badge" aria-live="polite">{{ cartCount }}</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="trang-chu">
+      <!-- SECTION khuyến mãi tĩnh, không cần Vue. -->
+      <section id="khuyen-mai" class="promo-section mx-auto max-w-6xl px-6 pt-10" aria-labelledby="promo-title">
+        <div class="section-heading">
+          <p class="eyebrow">Ưu đãi có hạn</p>
+          <h1 id="promo-title" class="text-2xl font-bold">🔥 Khuyến mãi hôm nay</h1>
+        </div>
+        <div class="promo-grid grid grid-cols-1 gap-4 md:grid-cols-2">
+          <article class="promo-card promo-indigo rounded-xl bg-indigo-600 p-6 text-white">
+            <span class="promo-icon" aria-hidden="true">⚡</span>
+            <h2 class="text-xl font-bold">Giảm 20% cáp sạc</h2>
+            <p class="mt-1">Áp dụng cho mọi loại cáp, hết ngày hôm nay.</p>
+          </article>
+          <article class="promo-card promo-pink rounded-xl bg-pink-500 p-6 text-white">
+            <span class="promo-icon" aria-hidden="true">✨</span>
+            <h2 class="text-xl font-bold">Mua 2 ốp lưng giảm 30.000đ</h2>
+            <p class="mt-1">Chọn tuỳ ý theo dòng máy của bạn.</p>
+          </article>
+        </div>
+      </section>
+
+      <div class="shop-layout mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-10 lg:grid-cols-3">
+        <!-- SECTION sản phẩm được Vue render từ dữ liệu, mỗi sản phẩm là một ARTICLE. -->
+        <section id="san-pham" class="product-section lg:col-span-2" aria-labelledby="products-title">
+          <div class="section-heading">
+            <p class="eyebrow">Chọn món đồ bạn cần</p>
+            <h2 id="products-title" class="text-2xl font-bold">Phụ kiện nổi bật</h2>
+          </div>
+
+          <!-- v-model đồng bộ nội dung ô tìm kiếm với tuKhoa; computed lọc danh sách ngay khi gõ. -->
+          <label class="search-box">
+            <span class="sr-only">Tìm kiếm sản phẩm</span>
+            <span aria-hidden="true">⌕</span>
+            <input v-model="tuKhoa" type="search" placeholder="Tìm sản phẩm (ví dụ: ốp, tai nghe)..."
+                   autocomplete="off">
+          </label>
+
+          <p v-if="danhSachLoc.length === 0" class="empty-search" role="status">
+            Không tìm thấy sản phẩm nào cho “{{ tuKhoa }}”.
+          </p>
+
+          <div v-else class="product-grid grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <article v-for="sp in danhSachLoc" :key="sp.id" class="product-card overflow-hidden rounded-xl bg-white shadow">
+              <div class="product-image-wrap">
+                <img :src="sp.anh" :alt="sp.ten" class="product-image" loading="lazy" width="480" height="320">
+                <span class="product-category">{{ sp.nhan }}</span>
+              </div>
+              <div class="product-info p-4">
+                <h3 class="text-lg font-semibold">{{ sp.ten }}</h3>
+                <p class="product-description mt-1 text-sm">{{ sp.moTa }}</p>
+                <p class="product-price mt-3 font-bold">{{ dinhDangGia(sp.gia) }}</p>
+                <button @click="themVaoGio(sp)" type="button"
+                        class="add-button mt-3 w-full rounded-lg bg-indigo-600 py-2 text-white transition hover:bg-indigo-700">
+                  Thêm vào giỏ
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ASIDE giỏ hàng: v-if/v-else hiển thị trạng thái; v-show giữ dòng tổng tiền trong DOM. -->
+        <aside id="gio-hang" class="cart-panel h-fit rounded-xl bg-white p-6 shadow lg:sticky lg:top-24"
+               aria-labelledby="cart-title">
+          <div class="cart-heading">
+            <span class="cart-heading-icon" aria-hidden="true">🛍️</span>
+            <div>
+              <p class="eyebrow">Đơn hàng của bạn</p>
+              <h2 id="cart-title" class="text-xl font-bold">Giỏ hàng</h2>
+            </div>
+          </div>
+
+          <p v-if="cart.length === 0" class="cart-empty">Giỏ hàng đang trống. Hãy chọn món bạn thích nhé!</p>
+          <ul v-else class="cart-list">
+            <li v-for="(item, index) in cart" :key="`${item.id}-${index}`" class="cart-item">
+              <img :src="item.anh" :alt="item.ten" class="cart-item-image" width="56" height="56">
+              <div class="cart-item-details">
+                <p class="cart-item-name">{{ item.ten }}</p>
+                <p class="cart-item-price">{{ dinhDangGia(item.gia) }}</p>
+              </div>
+              <!-- Xoá đúng phần tử theo vị trí; Vue tự cập nhật giỏ và tổng tiền. -->
+              <button @click="xoaKhoiGio(index)" type="button" class="remove-button"
+                      :aria-label="`Xoá ${item.ten} khỏi giỏ hàng`">Xoá</button>
+            </li>
+          </ul>
+
+          <div class="cart-total" v-show="cart.length > 0">
+            <span>Tổng tiền</span>
+            <strong>{{ dinhDangGia(tongTien) }}</strong>
+          </div>
+          <p class="cart-note">Phí vận chuyển sẽ được tính khi xác nhận đơn hàng.</p>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Đánh giá minh hoạ cho cửa hàng; thay bằng phản hồi thực tế khi có dữ liệu khách hàng. -->
+    <section id="danh-gia" class="reviews-section mx-auto max-w-6xl px-6 pb-12" aria-labelledby="reviews-title">
+      <div class="reviews-heading">
+        <div>
+          <p class="eyebrow">Khách hàng nói gì</p>
+          <h2 id="reviews-title" class="text-2xl font-bold">Đánh giá cửa hàng</h2>
+          <p class="reviews-intro">Một vài nhận xét mẫu về trải nghiệm mua sắm tại Tiến Táo.</p>
+        </div>
+        <div class="rating-summary" aria-label="Điểm đánh giá mẫu: 5 trên 5 sao">
+          <span class="rating-score">5.0</span>
+          <span class="rating-stars" aria-hidden="true">★★★★★</span>
+          <span class="rating-caption">Điểm đánh giá mẫu</span>
+        </div>
+      </div>
+
+      <div class="review-grid">
+        <article class="review-card">
+          <div class="review-card-top">
+            <img class="review-avatar review-avatar-photo" src="../images/messi.png" alt="Ảnh đại diện Messi">
+            <div>
+              <h3 class="review-name">Messi</h3>
+              <p class="review-date">Khách hàng mẫu</p>
+            </div>
+            <span class="review-stars" aria-label="5 trên 5 sao">★★★★★</span>
+          </div>
+          <p class="review-text">Sản phẩm đúng mô tả, đóng gói cẩn thận. Mình rất hài lòng với chiếc ốp lưng mới.</p>
+          <span class="review-product">Đã mua: Ốp lưng</span>
+        </article>
+
+        <article class="review-card">
+          <div class="review-card-top">
+            <img class="review-avatar review-avatar-photo" src="../images/ronaldo.png" alt="Ảnh đại diện Ronaldo">
+            <div>
+              <h3 class="review-name">Ronaldo</h3>
+              <p class="review-date">Khách hàng mẫu</p>
+            </div>
+            <span class="review-stars" aria-label="5 trên 5 sao">★★★★★</span>
+          </div>
+          <p class="review-text">Tìm và chọn sản phẩm nhanh, tai nghe hoạt động tốt. Sẽ quay lại ủng hộ cửa hàng.</p>
+          <span class="review-product">Đã mua: Tai nghe Bluetooth</span>
+        </article>
+
+        <article class="review-card">
+          <div class="review-card-top">
+            <img class="review-avatar review-avatar-photo" src="../images/anh-bo.png" alt="Ảnh đại diện Anh Bơ">
+            <div>
+              <h3 class="review-name">Anh Bơ</h3>
+              <p class="review-date">Khách hàng mẫu</p>
+            </div>
+            <span class="review-stars" aria-label="5 trên 5 sao">★★★★★</span>
+          </div>
+          <p class="review-text">Giá hợp lý, thông tin rõ ràng. Phần tư vấn và trải nghiệm mua sắm rất dễ chịu.</p>
+          <span class="review-product">Đã mua: Cáp sạc Type-C</span>
+        </article>
+
+        <article class="review-card">
+          <div class="review-card-top">
+            <img class="review-avatar review-avatar-photo" src="../images/hieuchunhat.png" alt="Ảnh đại diện hieuchunhat">
+            <div>
+              <h3 class="review-name">hieuchunhat</h3>
+              <p class="review-date">Khách hàng mẫu</p>
+            </div>
+            <span class="review-stars" aria-label="5 trên 5 sao">★★★★★</span>
+          </div>
+          <p class="review-text">Sản phẩm đẹp, chất lượng tốt. Trải nghiệm mua sắm tại Tiến Táo rất tiện lợi.</p>
+          <span class="review-product">Khách hàng cửa hàng</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- FOOTER tĩnh: thông tin liên hệ, mạng xã hội và bản quyền. -->
+    <footer id="lien-he" class="site-footer">
+      <div class="footer-grid mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-10 md:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <a href="#trang-chu" class="footer-brand">
+            <img class="shop-logo" src="../images/logo-tien-tao.png" alt="">
+            <span>Tiến Táo</span>
+          </a>
+          <p class="footer-copy">Phụ kiện nhỏ, trải nghiệm lớn.</p>
+        </div>
+        <div>
+          <h2 class="footer-title">Liên hệ</h2>
+          <p>123 Nguyễn Huệ, Q.1, TP.HCM</p>
+          <p>Hotline: <a href="tel:0900000000">0900 000 000</a></p>
+        </div>
+        <div>
+          <h2 class="footer-title">Chăm sóc khách hàng</h2>
+          <ul class="customer-care-list">
+            <li v-for="dichVu in dichVuChamSoc" :key="dichVu.ten">
+              <button class="customer-care-button" type="button" @click="moChamSocKhachHang(dichVu)">
+                {{ dichVu.ten }}
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="footer-title">Theo dõi & bản quyền</h2>
+          <p>Facebook · Instagram · TikTok</p>
+          <p>© 2026 Tiến Táo. Bài tập môn Thiết kế Web.</p>
+        </div>
+      </div>
+    </footer>
+
+    <div v-if="dichVuDangMo" class="care-dialog-backdrop" role="presentation"
+         @click.self="dongChamSocKhachHang">
+      <section class="care-dialog" role="dialog" aria-modal="true" :aria-labelledby="'care-dialog-title'">
+        <button class="care-dialog-close" type="button" aria-label="Đóng hướng dẫn"
+                @click="dongChamSocKhachHang">×</button>
+        <p class="eyebrow">Tiến Táo hỗ trợ bạn</p>
+        <h2 id="care-dialog-title" class="care-dialog-title">{{ dichVuDangMo.ten }}</h2>
+        <p class="care-dialog-description">{{ dichVuDangMo.moTa }}</p>
+        <h3 class="care-dialog-subtitle">Cách thực hiện</h3>
+        <ol class="care-dialog-steps">
+          <li v-for="(buoc, index) in dichVuDangMo.huongDan" :key="index">{{ buoc }}</li>
+        </ol>
+        <div class="care-dialog-actions">
+          <a class="care-call-button" href="tel:0900000000">Gọi 0900 000 000</a>
+          <button class="care-dismiss-button" type="button" @click="dongChamSocKhachHang">Đóng</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Vue 3 được nạp trước app.js để Vue.createApp sẵn sàng khi khởi chạy. -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="../js/app.js"></script>
+</body>
+</html>
